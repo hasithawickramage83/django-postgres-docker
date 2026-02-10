@@ -1,0 +1,15 @@
+asgiref==3.10.0
+Django==5.2.7
+djangorestframework==3.16.1
+djangorestframework_simplejwt==5.5.1
+psycopg2-binary==2.9.11
+PyJWT==2.10.1
+sqlparse==0.5.3
+tzdata==2025.2
+gunicorn==21.2.0
+pytest==8.3.4
+python-decouple==3.8
+Pillow
+whitenoise
+pytest-django
+django-cors-headers
