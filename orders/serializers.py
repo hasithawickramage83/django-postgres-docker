@@ -6,6 +6,10 @@ from products.serializers import ProductSerializer  # assuming you already have 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductSerializer(read_only=True)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['product'].context.update({'request': self.context.get('request')})
+
     class Meta:
         model = OrderItem
         fields = ['id', 'product', 'quantity', 'price', 'created_at', 'updated_at']
@@ -15,6 +19,10 @@ class OrderItemSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     items = OrderItemSerializer(many=True, read_only=True)
     total_price = serializers.SerializerMethodField()
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['items'].context.update(self.context)
 
     class Meta:
         model = Order  # model stays Order

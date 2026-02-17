@@ -46,7 +46,7 @@ class CartView(APIView):
         order = Order.objects.filter(user=request.user, status=Order.Status.PENDING).first()
         if not order:
             return Response({"message": "Cart is empty"}, status=status.HTTP_200_OK)
-        serializer = OrderSerializer(order)
+        serializer = OrderSerializer(order, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
