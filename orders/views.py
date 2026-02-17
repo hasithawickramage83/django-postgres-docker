@@ -72,6 +72,27 @@ class CheckoutView(APIView):
         return Response({"message": "Order placed successfully"}, status=status.HTTP_200_OK)
 
 
+class RemoveFromCartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, item_id):
+        """
+        Delete a specific OrderItem from the user's pending cart.
+        """
+        # Get the user's pending order
+        order = Order.objects.filter(user=request.user, status=Order.Status.PENDING).first()
+        if not order:
+            return Response({"error": "No pending cart found"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get the item to delete
+        item = order.items.filter(id=item_id).first()
+        if not item:
+            return Response({"error": "Item not found in cart"}, status=status.HTTP_404_NOT_FOUND)
+
+        # Delete the item
+        item.delete()
+        return Response({"message": "Item removed from cart"}, status=status.HTTP_200_OK)
+
 
 # --- ORDER LIST / DETAILS ---
 
