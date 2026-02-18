@@ -1,8 +1,9 @@
 from django.urls import path
-from .views import AddToCartView, CartView, CheckoutView,MyOrdersView, OrderDetailView,RemoveFromCartView
+from .views import AddToCartView, CartView, CheckoutView, MyOrdersView, OrderDetailView, RemoveFromCartView,ReduceFromCartView
 
 urlpatterns = [
     path("cart/add/", AddToCartView.as_view(), name="cart-add"),
+    path("cart/reduce/", ReduceFromCartView.as_view(), name="cart-reduce"),
     path("cart/", CartView.as_view(), name="cart-view"),
     path("checkout/", CheckoutView.as_view(), name="checkout"),
     path('', MyOrdersView.as_view(), name='my-orders'),  # GET /api/orders/

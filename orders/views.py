@@ -17,7 +17,7 @@ class AddToCartView(APIView):
         product_id = request.data.get("product_id")
         quantity = int(request.data.get("quantity", 1))
 
-        if quantity <= 0:
+        if quantity < 0:
             return Response({"error": "Quantity must be greater than zero"}, status=status.HTTP_400_BAD_REQUEST)
 
         product = get_object_or_404(Product, id=product_id, is_active=True)
@@ -38,6 +38,34 @@ class AddToCartView(APIView):
 
         return Response({"message": "Product added to cart"}, status=status.HTTP_200_OK)
 
+class ReduceFromCartView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        product_id = request.data.get("product_id")
+        quantity = int(request.data.get("quantity", 1))
+
+        if quantity <= 0:
+            return Response({"error": "Quantity must be greater than zero"}, status=status.HTTP_400_BAD_REQUEST)
+
+        product = get_object_or_404(Product, id=product_id, is_active=True)
+
+        if product.quantity < quantity:
+            return Response({"error": "Not enough stock available"}, status=status.HTTP_400_BAD_REQUEST)
+
+        order, _ = Order.objects.get_or_create(user=user, status=Order.Status.PENDING)
+
+        item, created = OrderItem.objects.get_or_create(
+            order=order,
+            product=product,
+            defaults={"quantity": quantity, "price": product.price}
+        )
+        if not created:
+            item.quantity -= quantity
+            item.save()
+
+        return Response({"message": "Product reduced from cart"}, status=status.HTTP_200_OK)
 
 class CartView(APIView):
     permission_classes = [IsAuthenticated]
