@@ -96,14 +96,24 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 #     }
 # }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': config('DB_NAME', default='djrestdb'),
+#         'USER': config('DB_USER', default='postgres'),
+#         'PASSWORD': config('DB_PASSWORD', default='postgres'),
+#         'HOST': 'tcp.us-east-1.clawcloudrun.com',  # or 'db' if Django runs in Docker later
+#         'PORT': '38053',
+#     }
+# }
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='djrestdb'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': 'tcp.us-east-1.clawcloudrun.com',  # or 'db' if Django runs in Docker later
-        'PORT': '38053',
+        'NAME': config('DB_NAME', default='neondb'),
+        'USER': config('DB_USER', default='neondb_owner'),
+        'PASSWORD': config('DB_PASSWORD', default='npg_VlK8TvjiOk6p'),
+        'HOST': config('DB_HOST',default='ep-soft-river-aizhrwke-pooler.c-4.us-east-1.aws.neon.tech') , # or 'db' if Django runs in Docker later
+        'PORT': '5432',
     }
 }
 
