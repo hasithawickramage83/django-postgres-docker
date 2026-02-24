@@ -19,10 +19,10 @@ RUN pip install --upgrade pip && pip install -r requirements.txt
 
 # Copy project
 COPY . .
-
-
-# Collect static files
-RUN python manage.py collectstatic --noinput
-
-# Run gunicorn
+# Expose port 8000
+EXPOSE 8000
+# Run migrations & collectstatic later
+# Use Gunicorn to serve Django
+# Replace 'backend' with your Django project folder name if different
 CMD ["gunicorn", "backend.wsgi:application", "--bind", "0.0.0.0:8000"]
+#CMD ["sh", "-c", "python manage.py migrate && python manage.py collectstatic --noinput && gunicorn backend.wsgi:application --bind 0.0.0.0:8000"]
