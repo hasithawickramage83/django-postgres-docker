@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Payment Integration</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #6772e5;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+        #card-element {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Complete Your Payment</h1>
+    
+    <div id="order-summary">
+        <h3>Order Summary</h3>
+        <p>Total Amount: $<span id="amount">0.00</span></p>
+    </div>
+
+    <form id="payment-form">
+        <div class="form-group">
+            <label for="order-id">Order ID</label>
+            <input type="number" id="order-id" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="card-element">Credit or debit card</label>
+            <div id="card-element">
+                <!-- A Stripe Element will be inserted here. -->
+            </div>
+        </div>
+        
+        <button id="submit-button" type="submit">Pay Now</button>
+        
+        <div id="payment-result" class="error"></div>
+    </form>
+
+    <script>
+        // Initialize Stripe with your publishable key
+        const stripe = Stripe('pk_test_51T25z37XZd7yDO6LaO98sxRoHsjkYInYMVp1EgttlbuPxJ6sEtWnrI02w4Qnv9O0hcTz8RGZkH0lZRO5qNPMVIUh00FQetaYEw');
+        
+        const elements = stripe.elements();
+        
+        // Create an instance of the card Element
+        const card = elements.create('card');
+        
+        // Add an instance of the card Element into the `card-element` div
+        card.mount('#card-element');
+        
+        // Handle real-time validation errors from the card Element
+        card.on('change', ({error}) => {
+            const displayError = document.getElementById('payment-result');
+            if (error) {
+                displayError.textContent = error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+        
+        // Handle form submission
+        const form = document.getElementById('payment-form');
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const orderId = document.getElementById('order-id').value;
+            const submitButton = document.getElementById('submit-button');
+            const resultDiv = document.getElementById('payment-result');
+            
+            if (!orderId) {
+                resultDiv.textContent = 'Please enter an order ID';
+                resultDiv.className = 'error';
+                return;
+            }
+            
+            submitButton.disabled = true;
+            resultDiv.textContent = 'Processing payment...';
+            resultDiv.className = '';
+            
+            try {
+                // Step 1: Create payment intent
+                const response = await fetch('/api/payments/create-payment-intent/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    },
+                    body: JSON.stringify({
+                        order_id: parseInt(orderId),
+                        payment_method: 'CARD'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to create payment intent');
+                }
+                
+                // Update amount display
+                document.getElementById('amount').textContent = data.amount;
+                
+                // Step 2: Confirm payment with Stripe
+                const {error, paymentIntent} = await stripe.confirmCardPayment(data.client_secret, {
+                    payment_method: {
+                        card: card,
+                        billing_details: {
+                            name: 'Customer Name',
+                        },
+                    }
+                });
+                
+                if (error) {
+                    throw new Error(error.message);
+                }
+                
+                // Step 3: Confirm payment on backend
+                const confirmResponse = await fetch('/api/payments/confirm-payment/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    },
+                    body: JSON.stringify({
+                        payment_intent_id: paymentIntent.id
+                    })
+                });
+                
+                const confirmData = await confirmResponse.json();
+                
+                if (!confirmResponse.ok) {
+                    throw new Error(confirmData.error || 'Failed to confirm payment');
+                }
+                
+                resultDiv.textContent = 'Payment successful! Your order has been confirmed.';
+                resultDiv.className = 'success';
+                form.reset();
+                
+            } catch (error) {
+                resultDiv.textContent = error.message;
+                resultDiv.className = 'error';
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+        
+        // Function to get order details (optional)
+        async function getOrderDetails(orderId) {
+            try {
+                const response = await fetch(`/api/orders/${orderId}/`, {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const order = await response.json();
+                    document.getElementById('amount').textContent = order.total_price;
+                }
+            } catch (error) {
+                console.error('Failed to fetch order details:', error);
+            }
+        }
+        
+        // Auto-fetch order details when order ID changes
+        document.getElementById('order-id').addEventListener('change', (e) => {
+            const orderId = e.target.value;
+            if (orderId) {
+                getOrderDetails(orderId);
+            }
+        });
+    </script>
+</body>
+</html>
