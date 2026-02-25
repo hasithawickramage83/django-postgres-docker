@@ -15,7 +15,7 @@ from pathlib import Path
 
 import dj_database_url
 from decouple import config, Config
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 # Load .env
 # load_dotenv()
