@@ -27,7 +27,8 @@ SECRET_KEY = 'django-insecure-ug55-f+$7&ayh+k858m=5*zp@!lwljajeiyu=4o2@v(_q9z0w)
 # STRIPE_SECRET_KEY = os.getenv("SECRET_KEY", default="django-insecure-ug55-f+$7&ayh+k858m=5*zp@!lwljajeiyu=4o2@v(_q9z0w)")
 BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config("DEBUG",default="False") == "True"
+# DEBUG = config("DEBUG",default="False") == "True"
+DEBUG = "False"
 # Static files
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
