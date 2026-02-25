@@ -15,7 +15,10 @@ from pathlib import Path
 
 import dj_database_url
 from decouple import config, Config
+from dotenv import load_dotenv
 
+# Load .env
+load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -141,14 +144,17 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 #         default=os.environ.get('DATABASE_URL')
 #     )
 # }
-DATABASE_URL = config('DATABASE_URL')
-DATABASES=   {
-    "default": dj_database_url.parse(
-        DATABASE_URL,
-        conn_max_age=600,
-        ssl_require=True
-    )
-}
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+
+DATABASES = {
+        "default": dj_database_url.parse(
+            DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True
+        )
+    }
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
